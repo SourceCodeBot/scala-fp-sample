@@ -1,0 +1,47 @@
+name: Scala CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Run tests
+      run: sbt test
+    - name: Build CLI
+      run: sbt "project cli" universal:packageBin
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: cli-${{ github.run_number }}.zip
+        path: "50-app-cli/target/universal/*.zip"
+    - name: Build GUI
+      run: sbt "project gui" universal:packageBin
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: gui-${{ github.run_number }}.zip
+        path: "51-app-gui/target/universal/*.zip"
+    - name: Build API
+      run: sbt "project api" universal:packageBin
+    - name: Build API docker
+      run: sbt "project api" docker:stage
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: api-${{ github.run_number }}.zip
+        path: "52-app-api/target/universal/*.zip"
